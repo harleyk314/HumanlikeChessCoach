@@ -11,7 +11,7 @@ function App() {
   const gameRef = useRef(new Chess())
   const [, forceRender] = useState(0)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
-  const [viewIndex, setViewIndex] = useState<number | null>(null)
+  const [viewIndex, setViewIndex] = useState(-1) //-1 is the starting index
   const [settings, setSettings] = useState({
     showLegalMoves: true,
     soundEnabled: true,
@@ -26,7 +26,6 @@ function App() {
   const isStalemate = game.isStalemate()
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
-
   const pgnRows: { moveNumber: number; white: string; black?: string }[] = []
   for (let i = 0; i < moves.length; i++) {
     const move = moves[i]
@@ -55,16 +54,25 @@ function App() {
 
   const newGame = () => {
     gameRef.current = new Chess()
+    setViewIndex(-1)
     setBoardFlipped(false)
     forceRender(x => x + 1)
   }
 
   const makeMove = (from: string, to: string) => {
     // only allow moves if we're at the latest position
-    if (viewIndex !== null && viewIndex !== moves.length) return
+    const isLatest = viewIndex === moves.length - 1
+    if (!isLatest) return
     
-    gameRef.current.move({ from, to })
+    const move = gameRef.current.move({ from, to })
 
+    if (!move) return
+    setViewIndex(gameRef.current.history().length - 1)
+
+    if (move) {
+      setViewIndex(gameRef.current.history().length - 1)
+      forceRender(x => x + 1)
+    }
     if (settings.soundEnabled) {
       const audio = new Audio("/move.mp3")
       audio.play()
@@ -74,7 +82,10 @@ function App() {
 
   const undo = () => {
     gameRef.current.undo()
-    setViewIndex(null)
+
+    const newLength = gameRef.current.history().length
+    setViewIndex(newLength - 1)
+
     forceRender(x => x + 1)
   }
 
@@ -93,17 +104,14 @@ function App() {
     forceRender(x => x + 1)
   }
 
+  const max = game.history().length - 1
+
   const stepBack = () => {
-    setViewIndex(v =>
-      v === null ? moves.length - 1 : Math.max(0, v - 1)
-    )
+    setViewIndex(v => Math.max(-1, v - 1))
   }
 
   const stepForward = () => {
-    setViewIndex(v => {
-      if (v === null) return null
-      return v + 1 >= moves.length ? null : v + 1
-    })
+    setViewIndex(v => Math.min(max, v + 1))
   }
 
   const goToMove = (index: number) => {
@@ -111,15 +119,15 @@ function App() {
   }
 
   //ChatGPT: This is the key idea: we temporarily replay moves up to a point.
-  //If I don't understand this, I should ask ChatGPT for clarification.
-  const viewMoves =
-    viewIndex === null
-      ? moves
-      : moves.slice(0, viewIndex)
-      const viewGame = (() => {
+const viewGame = (() => {
   const g = new Chess()
 
-  for (const m of viewMoves) {
+  const safeMoves =
+    viewIndex === -1
+      ? []
+      : moves.slice(0, viewIndex + 1)
+
+  for (const m of safeMoves) {
     g.move(m)
   }
 
@@ -149,6 +157,7 @@ function App() {
           goToMove={goToMove}
           viewIndex={viewIndex}
           currentIndex={currentIndex}
+          movesLength={moves.length}
         />
       </div>
         <Controls
