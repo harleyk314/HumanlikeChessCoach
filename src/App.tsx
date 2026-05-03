@@ -21,6 +21,7 @@ function App() {
   const [pgnInput, setPgnInput] = useState("")
   const game = gameRef.current
   const moves = game.history()
+  const currentIndex = moves.length === 0 ? null : moves.length - 1
   const isCheckmate = game.isCheckmate()
   const isStalemate = game.isStalemate()
   const isDraw = game.isDraw()
@@ -73,6 +74,7 @@ function App() {
 
   const undo = () => {
     gameRef.current.undo()
+    setViewIndex(null)
     forceRender(x => x + 1)
   }
 
@@ -145,6 +147,8 @@ function App() {
           loadPgn={loadPgn}
           pgnRows={pgnRows}
           goToMove={goToMove}
+          viewIndex={viewIndex}
+          currentIndex={currentIndex}
         />
       </div>
         <Controls

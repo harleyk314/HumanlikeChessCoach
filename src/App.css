@@ -4,6 +4,10 @@
   align-items: center;
   padding: 20px;
 }
+.active-move {
+  background: #ffd54f;
+}
+
 .chess-board {
   display: flex;
   flex-direction: column;
