@@ -2,7 +2,7 @@ import { Chess } from "chess.js"
 import { useRef, useState } from "react"
 import Board from "./Board"
 import "./App.css"
-
+import PGNPanel from "./PGNPanel"
 
 function App() {
   const gameRef = useRef(new Chess())
@@ -21,8 +21,6 @@ function App() {
   const isStalemate = game.isStalemate()
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
-
-
 
   const pgnRows: { moveNumber: number; white: string; black?: string }[] = []
   for (let i = 0; i < moves.length; i++) {
@@ -101,21 +99,12 @@ function App() {
             settings={settings}
           />
         </div>
-        <div className="pgn-box-overview">
-          <div className="moves-header">
-            Moves
-            </div>
-          <div className="pgn-box">
-            
-            {pgnRows.map((row) => (
-              <div key={row.moveNumber} className="pgn-row">
-                <div className="pgn-num">{row.moveNumber}.</div>
-                <div className="pgn-white">{row.white}</div>
-                <div className="pgn-black">{row.black ?? ""}</div>
-              </div>
-            ))}
-          </div>
-      </div>
+        <PGNPanel
+          pgnInput={pgnInput}
+          setPgnInput={setPgnInput}
+          loadPgn={loadPgn}
+          pgnRows={pgnRows}
+        />
       </div>
       <div className="controls">
         <button onClick={newGame}>New Game</button>
@@ -124,44 +113,33 @@ function App() {
           Flip Board
         </button>
       </div>
+        <div className="settings">
+          <label>
+            <input
+              type="checkbox"
+              checked={settings.soundEnabled}
+              onChange={(e) =>
+                setSettings(s => ({ ...s, soundEnabled: e.target.checked }))
+              }
+            />
+            Sound
+          </label>
 
-      <div>
-        <textarea
-          placeholder="Paste PGN here..."
-          rows={5}
-          style={{ width: "100%", marginTop: 10 }}
-          value={pgnInput}
-          onChange={(e) => setPgnInput(e.target.value)}
-        />
-        <button onClick={loadPgn}>Load PGN</button>
-      </div>
-
-      <div className="settings">
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.soundEnabled}
-            onChange={(e) =>
-              setSettings(s => ({ ...s, soundEnabled: e.target.checked }))
-            }
-          />
-          Sound
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.highlightLastMove}
-            onChange={(e) =>
-              setSettings(s => ({ ...s, highlightLastMove: e.target.checked }))
-            }
-          />
-          Highlight last move
-        </label>
-      </div>
+          <label>
+            <input
+              type="checkbox"
+              checked={settings.highlightLastMove}
+              onChange={(e) =>
+                setSettings(s => ({ ...s, highlightLastMove: e.target.checked }))
+              }
+            />
+            Highlight last move
+          </label>
+        </div>
       <div className="status">
         <strong>{status}</strong>
-      </div>
+      
+    </div>
     </div>
   )
 }

@@ -87,7 +87,7 @@ h1 {
 
 .pgn-box {
   width: 260px;              /* prevents horizontal growth */
-  height: 400px;
+  height: 300px;
   overflow-y: auto;
 
   border: 4px solid #7191f8;
