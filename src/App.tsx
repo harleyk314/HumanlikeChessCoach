@@ -1,8 +1,11 @@
+/// <reference types="vite/client" />
 import { Chess } from "chess.js"
 import { useRef, useState } from "react"
 import Board from "./Board"
 import "./App.css"
 import PGNPanel from "./PGNPanel"
+import Controls from "./Controls"
+
 
 function App() {
   const gameRef = useRef(new Chess())
@@ -106,13 +109,12 @@ function App() {
           pgnRows={pgnRows}
         />
       </div>
-      <div className="controls">
-        <button onClick={newGame}>New Game</button>
-        <button onClick={undo}>Undo</button>
-        <button onClick={() => setBoardFlipped(f => !f)}>
-          Flip Board
-        </button>
-      </div>
+        <Controls
+          newGame={newGame}
+          undo={undo}
+          isBoardFlipped={isBoardFlipped}
+          setBoardFlipped={setBoardFlipped}
+        />
         <div className="settings">
           <label>
             <input
