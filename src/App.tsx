@@ -14,12 +14,14 @@ function App() {
     highlightLastMove: true
   })
   const [isBoardFlipped, setBoardFlipped] = useState(false)
+  const [pgnInput, setPgnInput] = useState("")
   const game = gameRef.current
   const moves = game.history()
   const isCheckmate = game.isCheckmate()
   const isStalemate = game.isStalemate()
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
+
 
 
   const pgnRows: { moveNumber: number; white: string; black?: string }[] = []
@@ -69,6 +71,21 @@ function App() {
     forceRender(x => x + 1)
   }
 
+  const loadPgn = () => {
+    const newGame = new Chess()
+
+    try {
+      newGame.loadPgn(pgnInput)
+    } catch (e) {
+      alert("Invalid PGN")
+      return
+    }
+
+    gameRef.current = newGame
+    setSelectedSquare(null)
+    forceRender(x => x + 1)
+  }
+
   return (
     <div className="app">
       <h1>Chess App</h1>
@@ -107,6 +124,18 @@ function App() {
           Flip Board
         </button>
       </div>
+
+      <div>
+        <textarea
+          placeholder="Paste PGN here..."
+          rows={5}
+          style={{ width: "100%", marginTop: 10 }}
+          value={pgnInput}
+          onChange={(e) => setPgnInput(e.target.value)}
+        />
+        <button onClick={loadPgn}>Load PGN</button>
+      </div>
+
       <div className="settings">
         <label>
           <input
