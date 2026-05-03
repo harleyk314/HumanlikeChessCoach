@@ -8,7 +8,23 @@ function App() {
   const [, forceRender] = useState(0)
   const game = gameRef.current
   const pgn = game.pgn()
+  const isCheckmate = game.isCheckmate()
+  const isStalemate = game.isStalemate()
+  const isDraw = game.isDraw()
+  const isCheck = game.isCheck()
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
+
+  let status = ""
+
+  if (isCheckmate) {
+    status = `Checkmate! ${game.turn() === "w" ? "Black" : "White"} wins`
+  } else if (isStalemate) {
+    status = "Stalemate"
+  } else if (isDraw) {
+    status = "Draw"
+  } else if (isCheck) {
+    status = "Check"
+  }
 
   const newGame = () => {
     gameRef.current = new Chess()
@@ -44,6 +60,10 @@ function App() {
       <div style={{ marginTop: 20 }}>
         <h3>PGN</h3>
         <pre>{pgn}</pre>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <strong>{status}</strong>
       </div>
 
     </div>

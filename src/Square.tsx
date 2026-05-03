@@ -49,6 +49,13 @@ function Square({
 
   let background = isDark ? "#769656" : "#eeeed2"
 
+  const isKingInCheck =
+    piece?.type === "k" &&
+    piece.color === game.turn() &&
+    game.isCheck()
+
+  if (isKingInCheck) background = "#ff4d4d"
+
   if (isLegalMove) background = "#a9a9a9"
   if (selectedSquare === square) background = "#f6f669"
 
