@@ -135,3 +135,17 @@ button:active {
 .status {
   margin-top: 10px;
 }
+
+.settings {
+  margin-top: 15px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.settings label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

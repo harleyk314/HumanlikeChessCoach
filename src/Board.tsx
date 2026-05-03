@@ -3,6 +3,12 @@ import Square from "./Square"
 type Props = {
   game: any
   selectedSquare: string | null
+  settings: {
+    showLegalMoves: boolean
+    soundEnabled: boolean
+    highlightLastMove: boolean
+  }
+  isBoardFlipped: boolean
   setSelectedSquare: (s: string | null) => void
   makeMove: (from: string, to: string) => void
 }
@@ -12,6 +18,8 @@ const files = ["a","b","c","d","e","f","g","h"]
 function Board({
   game,
   selectedSquare,
+  settings,
+  isBoardFlipped,
   setSelectedSquare,
   makeMove
 }: Props) {
@@ -24,30 +32,34 @@ function Board({
 
   const legalSquares = legalMoves.map((m: any) => m.to)
 
+  const orientation = isBoardFlipped ? "b" : "w";
+
   return (
-    <div>
-      {board.map((row: any[], r: number) => (
-        <div key={r} style={{ display: "flex" }}>
-          {row.map((piece, c) => {
-            const square = files[c] + (8 - r)
+  <div>
+    {(orientation === "b" ? [...board].reverse() : board).map((row: any[], r: number) => (
+      <div key={r} style={{ display: "flex" }}>
+        {row.map((piece, c: number) => {
+          const actualRow = orientation === "b" ? 7 - r : r
+          const actualCol = c
 
-            return (
-              <Square
-                key={square}
-                square={square}
-                piece={piece}
-                game={game}
-                selectedSquare={selectedSquare}
-                setSelectedSquare={setSelectedSquare}
-                makeMove={makeMove}
-                isLegalMove={legalSquares.includes(square)}
-              />
-            )
-          })}
-        </div>
-      ))}
-    </div>
-  )
-}
+          const square = files[actualCol] + (8 - actualRow)
 
-export default Board
+          return (
+            <Square
+              key={square}
+              square={square}
+              piece={piece}
+              game={game}
+              selectedSquare={selectedSquare}
+              setSelectedSquare={setSelectedSquare}
+              makeMove={makeMove}
+              isLegalMove={legalSquares.includes(square)}
+            />
+          )
+        })}
+      </div>
+    ))}
+  </div>
+)}
+
+export default Board;

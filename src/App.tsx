@@ -8,6 +8,12 @@ function App() {
   const gameRef = useRef(new Chess())
   const [, forceRender] = useState(0)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
+  const [settings, setSettings] = useState({
+    showLegalMoves: true,
+    soundEnabled: true,
+    highlightLastMove: true
+  })
+  const [isBoardFlipped, setBoardFlipped] = useState(false)
   const game = gameRef.current
   const moves = game.history()
   const isCheckmate = game.isCheckmate()
@@ -44,11 +50,17 @@ function App() {
 
   const newGame = () => {
     gameRef.current = new Chess()
+    setBoardFlipped(false)
     forceRender(x => x + 1)
   }
 
   const makeMove = (from: string, to: string) => {
     gameRef.current.move({ from, to })
+
+    if (settings.soundEnabled) {
+      const audio = new Audio("/move.mp3")
+      audio.play()
+    }
     forceRender(x => x + 1)
 }
 
@@ -67,7 +79,9 @@ function App() {
             game={game}
             selectedSquare={selectedSquare}
             setSelectedSquare={setSelectedSquare}
+            isBoardFlipped = {isBoardFlipped}
             makeMove={makeMove}
+            settings={settings}
           />
         </div>
         <div className="pgn-box-overview">
@@ -89,8 +103,33 @@ function App() {
       <div className="controls">
         <button onClick={newGame}>New Game</button>
         <button onClick={undo}>Undo</button>
+        <button onClick={() => setBoardFlipped(f => !f)}>
+          Flip Board
+        </button>
       </div>
+      <div className="settings">
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.soundEnabled}
+            onChange={(e) =>
+              setSettings(s => ({ ...s, soundEnabled: e.target.checked }))
+            }
+          />
+          Sound
+        </label>
 
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.highlightLastMove}
+            onChange={(e) =>
+              setSettings(s => ({ ...s, highlightLastMove: e.target.checked }))
+            }
+          />
+          Highlight last move
+        </label>
+      </div>
       <div className="status">
         <strong>{status}</strong>
       </div>
