@@ -11,6 +11,7 @@ function App() {
   const gameRef = useRef(new Chess())
   const [, forceRender] = useState(0)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
+  const [viewIndex, setViewIndex] = useState<number | null>(null)
   const [settings, setSettings] = useState({
     showLegalMoves: true,
     soundEnabled: true,
@@ -58,6 +59,9 @@ function App() {
   }
 
   const makeMove = (from: string, to: string) => {
+    // only allow moves if we're at the latest position
+    if (viewIndex !== null && viewIndex !== moves.length) return
+    
     gameRef.current.move({ from, to })
 
     if (settings.soundEnabled) {
@@ -87,6 +91,39 @@ function App() {
     forceRender(x => x + 1)
   }
 
+  const stepBack = () => {
+    setViewIndex(v =>
+      v === null ? moves.length - 1 : Math.max(0, v - 1)
+    )
+  }
+
+  const stepForward = () => {
+    setViewIndex(v => {
+      if (v === null) return null
+      return v + 1 >= moves.length ? null : v + 1
+    })
+  }
+
+  const goToMove = (index: number) => {
+    setViewIndex(index)
+  }
+
+  //ChatGPT: This is the key idea: we temporarily replay moves up to a point.
+  //If I don't understand this, I should ask ChatGPT for clarification.
+  const viewMoves =
+    viewIndex === null
+      ? moves
+      : moves.slice(0, viewIndex)
+      const viewGame = (() => {
+  const g = new Chess()
+
+  for (const m of viewMoves) {
+    g.move(m)
+  }
+
+  return g
+})()
+  
   return (
     <div className="app">
       <h1>Chess App</h1>
@@ -94,7 +131,7 @@ function App() {
       <div className="main">
         <div className="chess-board">
           <Board
-            game={game}
+            game={viewGame}
             selectedSquare={selectedSquare}
             setSelectedSquare={setSelectedSquare}
             isBoardFlipped = {isBoardFlipped}
@@ -107,6 +144,7 @@ function App() {
           setPgnInput={setPgnInput}
           loadPgn={loadPgn}
           pgnRows={pgnRows}
+          goToMove={goToMove}
         />
       </div>
         <Controls
@@ -115,6 +153,8 @@ function App() {
           isBoardFlipped={isBoardFlipped}
           setBoardFlipped={setBoardFlipped}
         />
+        <button onClick={stepBack}>←</button>
+        <button onClick={stepForward}>→</button>
         <div className="settings">
           <label>
             <input

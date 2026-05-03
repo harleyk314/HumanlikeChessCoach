@@ -3,16 +3,22 @@ type Props = {
   setPgnInput: (value: string) => void
   loadPgn: () => void
   pgnRows: { moveNumber: number; white: string; black?: string }[]
+  goToMove: (index: number) => void
 }
 
-function PGNPanel({ pgnInput, setPgnInput, loadPgn, pgnRows }: Props) {
+function PGNPanel({ pgnInput, setPgnInput, loadPgn, pgnRows, goToMove }: Props) {
   return (
     <div className="pgn-box-overview">
       <div className="moves-header">Moves</div>
 
       <div className="pgn-box">
-        {pgnRows.map((row) => (
-          <div key={row.moveNumber} className="pgn-row">
+        {pgnRows.map((row, i) => (
+            <div
+              key={row.moveNumber}
+              className="pgn-row"
+              onClick={() => goToMove(i * 2)}
+              style={{ cursor: "pointer" }}
+            >
             <div className="pgn-num">{row.moveNumber}.</div>
             <div className="pgn-white">{row.white}</div>
             <div className="pgn-black">{row.black ?? ""}</div>
