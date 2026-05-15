@@ -8,6 +8,10 @@ type Props = {
   setSelectedSquare: (s: string | null) => void
   makeMove: (from: string, to: string) => void
   isLegalMove: boolean
+  lastMove: {
+    from: string
+    to: string
+  } | null
 }
 
 function Square({
@@ -17,7 +21,8 @@ function Square({
   selectedSquare,
   setSelectedSquare,
   makeMove,
-  isLegalMove
+  isLegalMove,
+  lastMove
 }: Props) {
 
   const handleClick = () => {
@@ -47,24 +52,51 @@ function Square({
   const isDark =
     (square.charCodeAt(0) + Number(square[1])) % 2 === 1
 
-  let background = isDark ? "#769656" : "#eeeed2"
-
-  const isKingInCheck =
-    piece?.type === "k" &&
-    piece.color === game.turn() &&
-    game.isCheck()
-
-  if (isKingInCheck) background = "#ff4d4d"
-
-  if (isLegalMove) background = "#a9a9a9"
-  if (selectedSquare === square) background = "#f6f669"
-
   const pieceColor =
     piece?.color === "w" ? "#680707" : "#222222"
+
+  const isFromSquare = lastMove?.from === square
+  const isToSquare = lastMove?.to === square
+
+  const classes = ["square"]
+
+  const isKingInCheck =
+  piece?.type === "k" &&
+  piece.color === game.turn() &&
+  game.isCheck()
+
+  if (isKingInCheck) {
+    classes.push("check")
+  }
+
+  if ((square.charCodeAt(0) + Number(square[1])) % 2 === 1) {
+    classes.push("dark")
+  } else {
+    classes.push("light")
+  }
+
+  if (selectedSquare === square) {
+    classes.push("selected")
+  }
+
+  if (isLegalMove) {
+    classes.push("legal-move")
+  }
+
+  if (isFromSquare) {
+    classes.push("last-move-from")
+  }
+
+  if (isToSquare) {
+    classes.push("last-move-to")
+  }
+
+  const className = classes.join(" ")
 
   return (
     <div
       onClick={handleClick}
+      className={className}
       style={{
         width: 60,
         height: 60,
@@ -73,7 +105,6 @@ function Square({
         justifyContent: "center",
         fontSize: "32px",
         cursor: "pointer",
-        backgroundColor: background,
         color: pieceColor
       }}
     >

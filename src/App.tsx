@@ -154,6 +154,7 @@ function App() {
             isBoardFlipped = {isBoardFlipped}
             makeMove={makeMove}
             settings={settings}
+            lastMove={lastMove}
           />
         </div>
         <div className="sidebar">

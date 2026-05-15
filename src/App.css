@@ -197,3 +197,47 @@ button:active {
   justify-content: center;
   gap: 10px;
 }
+
+.last-move-from {
+  background: rgba(255, 215, 0, 0.5);
+}
+
+.last-move-to {
+  background: rgba(255, 140, 0, 0.6);
+}
+
+.square {
+  transition: background-color 0.15s ease;
+}
+
+/* board base colors */
+.square.light {
+  background-color: #eeeed2;
+}
+
+.square.dark {
+  background-color: #769656;
+}
+
+/* interaction states */
+.square.selected {
+  background-color: #f6f669;
+}
+
+.square.legal-move {
+  background-color: #a9a9a9;
+}
+
+.square.last-move-from {
+  outline: 2px solid gold;
+  outline-offset: -2px;
+}
+
+.square.last-move-to {
+  outline: 2px solid orange;
+  outline-offset: -2px;
+}
+
+.square.check {
+  background-color: #ff4d4d;
+}

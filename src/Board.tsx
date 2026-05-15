@@ -11,6 +11,10 @@ type Props = {
   isBoardFlipped: boolean
   setSelectedSquare: (s: string | null) => void
   makeMove: (from: string, to: string) => void
+  lastMove: {
+    from: string
+    to: string
+  } | null
 }
 
 const files = ["a","b","c","d","e","f","g","h"]
@@ -21,7 +25,8 @@ function Board({
   settings,
   isBoardFlipped,
   setSelectedSquare,
-  makeMove
+  makeMove,
+  lastMove
 }: Props) {
 
   const board = game.board()
@@ -54,6 +59,7 @@ function Board({
               setSelectedSquare={setSelectedSquare}
               makeMove={makeMove}
               isLegalMove={legalSquares.includes(square)}
+              lastMove = {lastMove}
             />
           )
         })}
