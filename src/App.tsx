@@ -1,11 +1,10 @@
 /// <reference types="vite/client" />
 import { Chess } from "chess.js"
 import { useRef, useState } from "react"
-import Board from "./Board"
 import "./App.css"
+import Board from "./Board"
 import PGNPanel from "./PGNPanel"
 import Controls from "./Controls"
-
 
 function App() {
   const gameRef = useRef(new Chess())
@@ -26,6 +25,8 @@ function App() {
   const isStalemate = game.isStalemate()
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
+
+  //Set up the PGN rows for game import (should this be in PGNPanel?)
   const pgnRows: { moveNumber: number; white: string; black?: string }[] = []
   for (let i = 0; i < moves.length; i++) {
     const move = moves[i]
@@ -61,7 +62,7 @@ function App() {
 
   const makeMove = (from: string, to: string) => {
     // only allow moves if we're at the latest position
-    const isLatest = viewIndex === moves.length - 1
+    const isLatest = viewIndex === moves.length - 1 || moves.length === 0
     if (!isLatest) return
     
     const move = gameRef.current.move({ from, to })
@@ -77,7 +78,6 @@ function App() {
       const audio = new Audio("/move.mp3")
       audio.play()
     }
-    forceRender(x => x + 1)
 }
 
   const undo = () => {
@@ -119,17 +119,17 @@ function App() {
   }
 
   //ChatGPT: This is the key idea: we temporarily replay moves up to a point.
-const viewGame = (() => {
-  const g = new Chess()
+  const viewGame = (() => {
+    const g = new Chess()
 
-  const safeMoves =
-    viewIndex === -1
-      ? []
-      : moves.slice(0, viewIndex + 1)
+    const safeMoves =
+      viewIndex === -1
+        ? []
+        : moves.slice(0, viewIndex + 1)
 
-  for (const m of safeMoves) {
-    g.move(m)
-  }
+    for (const m of safeMoves) {
+      g.move(m)
+    }
 
   return g
 })()
@@ -149,52 +149,56 @@ const viewGame = (() => {
             settings={settings}
           />
         </div>
-        <PGNPanel
-          pgnInput={pgnInput}
-          setPgnInput={setPgnInput}
-          loadPgn={loadPgn}
-          pgnRows={pgnRows}
-          goToMove={goToMove}
-          viewIndex={viewIndex}
-          currentIndex={currentIndex}
-          movesLength={moves.length}
-        />
-      </div>
-        <Controls
-          newGame={newGame}
-          undo={undo}
-          isBoardFlipped={isBoardFlipped}
-          setBoardFlipped={setBoardFlipped}
-        />
-        <button onClick={stepBack}>←</button>
-        <button onClick={stepForward}>→</button>
-        <div className="settings">
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.soundEnabled}
-              onChange={(e) =>
-                setSettings(s => ({ ...s, soundEnabled: e.target.checked }))
-              }
-            />
-            Sound
-          </label>
-
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.highlightLastMove}
-              onChange={(e) =>
-                setSettings(s => ({ ...s, highlightLastMove: e.target.checked }))
-              }
-            />
-            Highlight last move
-          </label>
+        <div className="sidebar">
+          <PGNPanel
+            pgnInput={pgnInput}
+            setPgnInput={setPgnInput}
+            loadPgn={loadPgn}
+            pgnRows={pgnRows}
+            goToMove={goToMove}
+            viewIndex={viewIndex}
+            currentIndex={currentIndex}
+            movesLength={moves.length}
+          />
+          <div className="move-controls">
+            <button onClick={stepBack}>←</button>
+            <button onClick={stepForward}>→</button>
+          </div>
         </div>
+      </div>
+
+      <Controls
+        newGame={newGame}
+        undo={undo}
+        isBoardFlipped={isBoardFlipped}
+        setBoardFlipped={setBoardFlipped}
+      />
+      <div className="settings">
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.soundEnabled}
+            onChange={(e) =>
+              setSettings(s => ({ ...s, soundEnabled: e.target.checked }))
+            }
+          />
+          Sound
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.highlightLastMove}
+            onChange={(e) =>
+              setSettings(s => ({ ...s, highlightLastMove: e.target.checked }))
+            }
+          />
+          Highlight last move
+        </label>
+      </div>
       <div className="status">
-        <strong>{status}</strong>
-      
-    </div>
+          <strong>{status}</strong>
+      </div>
     </div>
   )
 }
