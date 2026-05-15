@@ -104,6 +104,12 @@ function App() {
     forceRender(x => x + 1)
   }
 
+  const exportPgn = () => {
+    const pgn = gameRef.current.pgn()
+
+    navigator.clipboard.writeText(pgn)
+  }
+
   const max = game.history().length - 1
 
   const stepBack = () => {
@@ -151,22 +157,27 @@ function App() {
         </div>
         <div className="sidebar">
           <PGNPanel
-            pgnInput={pgnInput}
-            setPgnInput={setPgnInput}
-            loadPgn={loadPgn}
             pgnRows={pgnRows}
             goToMove={goToMove}
             viewIndex={viewIndex}
-            currentIndex={currentIndex}
-            movesLength={moves.length}
+            stepBack={stepBack}
+            stepForward={stepForward}
           />
-          <div className="move-controls">
-            <button onClick={stepBack}>←</button>
-            <button onClick={stepForward}>→</button>
+          <div className="import-section">
+            <div className="textarea">
+              <textarea 
+                placeholder="Paste PGN here..."
+                value={pgnInput}
+                onChange={(e) => setPgnInput(e.target.value)}
+              />
+            </div>
+            <div className="load-and-export">
+              <button onClick={loadPgn}>Load PGN</button>
+              <button onClick={exportPgn}>Export PGN</button>
+            </div>
           </div>
         </div>
       </div>
-
       <Controls
         newGame={newGame}
         undo={undo}

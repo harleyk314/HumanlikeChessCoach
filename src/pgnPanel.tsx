@@ -1,15 +1,12 @@
 type Props = {
-  pgnInput: string
-  setPgnInput: (value: string) => void
-  loadPgn: () => void
   pgnRows: { moveNumber: number; white: string; black?: string }[]
   goToMove: (index: number) => void
   viewIndex: number
-  currentIndex: number | null
-  movesLength: number
+  stepBack: () => void
+  stepForward: () => void
 }
 
-function PGNPanel({ pgnInput, setPgnInput, loadPgn, pgnRows, goToMove, viewIndex, currentIndex, movesLength}: Props) {
+function PGNPanel({ pgnRows, goToMove, viewIndex, stepBack, stepForward}: Props) {
 
 
   return (
@@ -18,7 +15,6 @@ function PGNPanel({ pgnInput, setPgnInput, loadPgn, pgnRows, goToMove, viewIndex
 
       <div className="pgn-box">
         {pgnRows.map((row, i) => {
-            const effectiveIndex = viewIndex
             const whiteIndex = i * 2
             const blackIndex = i * 2 + 1
 
@@ -46,16 +42,10 @@ function PGNPanel({ pgnInput, setPgnInput, loadPgn, pgnRows, goToMove, viewIndex
             )
         })}
       </div>
-
-      <textarea
-        placeholder="Paste PGN here..."
-        value={pgnInput}
-        onChange={(e) => setPgnInput(e.target.value)}
-        rows={5}
-        style={{ width: "100%", marginTop: 10 }}
-      />
-
-      <button onClick={loadPgn}>Load PGN</button>
+      <div className="move-controls">
+        <button onClick={stepBack}>←</button>
+        <button onClick={stepForward}>→</button>
+      </div>
     </div>
   )
 }
