@@ -19,7 +19,8 @@ function App() {
   const [isBoardFlipped, setBoardFlipped] = useState(false)
   const [pgnInput, setPgnInput] = useState("")
   const game = gameRef.current
-  const moves = game.history()
+  const moves = game.history({ verbose: true })
+  const lastMove = viewIndex >= 0 ? moves[viewIndex] : null
   const currentIndex = moves.length === 0 ? null : moves.length - 1
   const isCheckmate = game.isCheckmate()
   const isStalemate = game.isStalemate()
@@ -27,7 +28,7 @@ function App() {
   const isCheck = game.isCheck()
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
-  const pgnRows: { moveNumber: number; white: string; black?: string }[] = []
+  const pgnRows: { moveNumber: number; white: any; black?: any }[] = []
   for (let i = 0; i < moves.length; i++) {
     const move = moves[i]
 

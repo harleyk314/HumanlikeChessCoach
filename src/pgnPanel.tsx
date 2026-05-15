@@ -1,5 +1,20 @@
+
+type Move = {
+  from: string
+  to: string
+  piece: string
+  san: string
+  captured?: string
+  promotion?: string
+  flags: string
+}
+
 type Props = {
-  pgnRows: { moveNumber: number; white: string; black?: string }[]
+  pgnRows: {
+  moveNumber: number
+  white: Move
+  black?: Move
+}[]
   goToMove: (index: number) => void
   viewIndex: number
   stepBack: () => void
@@ -29,14 +44,14 @@ function PGNPanel({ pgnRows, goToMove, viewIndex, stepBack, stepForward}: Props)
                   className={`pgn-white ${isWhiteActive ? "active-move" : ""}`}
                   onClick={() => goToMove(whiteIndex)}
                 >
-                  {row.white}
+                  {row.white.san}
                 </div>
 
                 <div
                   className={`pgn-black ${isBlackActive ? "active-move" : ""}`}
                   onClick={() => goToMove(blackIndex)}
                 >
-                  {row.black ?? ""}
+                  {row.black?.san ?? ""}
                 </div>
               </div>
             )
