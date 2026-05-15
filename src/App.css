@@ -198,16 +198,34 @@ button:active {
   gap: 10px;
 }
 
-.last-move-from {
-  background: rgba(255, 215, 0, 0.5);
-}
-
-.last-move-to {
-  background: rgba(255, 140, 0, 0.6);
+.piece {
+  position: relative;
+  z-index: 1;
 }
 
 .square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  isolation: isolate;
+  color: inherit;
+  z-index: 0;
   transition: background-color 0.15s ease;
+}
+
+.square::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.square > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* board base colors */
@@ -219,23 +237,30 @@ button:active {
   background-color: #769656;
 }
 
-/* interaction states */
+.square.last-move-from::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(2, 217, 255, 0.25);
+  pointer-events: none;
+}
+
+.square.last-move-to::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(0, 204, 255, 0.25);
+  pointer-events: none;
+}
+
 .square.selected {
   background-color: #f6f669;
 }
 
 .square.legal-move {
   background-color: #a9a9a9;
-}
-
-.square.last-move-from {
-  outline: 2px solid gold;
-  outline-offset: -2px;
-}
-
-.square.last-move-to {
-  outline: 2px solid orange;
-  outline-offset: -2px;
 }
 
 .square.check {

@@ -108,7 +108,9 @@ function Square({
         color: pieceColor
       }}
     >
-      {piece ? pieceSymbols[piece.type] : ""}
+      <span className="piece">
+        {piece ? pieceSymbols[piece.type] : ""}
+      </span>
     </div>
   )
 }
