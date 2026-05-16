@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { Chess } from "chess.js"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useStockfish } from "./hooks/useStockfish"
 import "./App.css"
 import Board from "./Board"
@@ -66,7 +66,7 @@ function App() {
   const isCheck = game.isCheck()
   //engine stuff
   const { bestMove, evaluation, analyse } = useStockfish()
-
+  
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
   const pgnRows: { moveNumber: number; white: any; black?: any }[] = []
@@ -181,6 +181,9 @@ function App() {
 
   return g
 })()
+  useEffect(() => {
+    analyse(viewGame.fen())
+  }, [viewGame.fen()])
   
   return (
     <div className="app">
@@ -212,6 +215,7 @@ function App() {
           <button>
             Play mode (Testing only)
           </button>
+          
           <button onClick={() => analyse(viewGame.fen())}>
             Test Stockfish
           </button>
