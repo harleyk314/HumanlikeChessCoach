@@ -143,8 +143,19 @@ function App() {
   
   return (
     <div className="app">
-      <h1>Chess App</h1>
+      <div className="header">
+        <div className="header-left">
+          Play computer
+        </div>
 
+        <div className="header-center">
+          Analysis
+        </div>
+
+        <div className="header-right">
+          About
+        </div>
+      </div>
       <div className="main">
         <div className="left-sidebar">
           <h2> Analysis mode </h2>
