@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 
 type Move = {
   from: string
@@ -23,6 +24,16 @@ type Props = {
 
 function PGNPanel({ pgnRows, goToMove, viewIndex, stepBack, stepForward}: Props) {
 
+  const activeMoveRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    activeMoveRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
+    })
+  }, [viewIndex])
+
+
 
   return (
     <div className="pgn-box-overview">
@@ -41,6 +52,7 @@ function PGNPanel({ pgnRows, goToMove, viewIndex, stepBack, stepForward}: Props)
                 <div className="pgn-num">{row.moveNumber}.</div>
 
                 <div
+                  ref={isWhiteActive ? activeMoveRef : null}
                   className={`pgn-white ${isWhiteActive ? "active-move" : ""}`}
                   onClick={() => goToMove(whiteIndex)}
                 >
@@ -48,6 +60,7 @@ function PGNPanel({ pgnRows, goToMove, viewIndex, stepBack, stepForward}: Props)
                 </div>
 
                 <div
+                  ref={isBlackActive ? activeMoveRef : null}
                   className={`pgn-black ${isBlackActive ? "active-move" : ""}`}
                   onClick={() => goToMove(blackIndex)}
                 >
