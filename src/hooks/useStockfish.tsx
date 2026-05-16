@@ -40,7 +40,7 @@ export function useStockfish() {
     }
   }, [])
 
-  const analyse = (fen: string, depth: number = 15) => {
+  const analyse = (fen: string, depth: number = 20) => {
     const sf = workerRef.current
     if (!sf) return
 

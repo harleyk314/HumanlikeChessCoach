@@ -40,27 +40,26 @@ function Board({
   const orientation = isBoardFlipped ? "b" : "w";
 
   return (
-  <div>
-    {(orientation === "b" ? [...board].reverse() : board).map((row: any[], r: number) => (
-      <div key={r} style={{ display: "flex" }}>
-        {row.map((piece, c: number) => {
-          const actualRow = orientation === "b" ? 7 - r : r
-          const actualCol = c
+    <div>
+      {(orientation === "b" ? [...board].reverse() : board).map((row: any[], r: number) => (
+        <div key={r} style={{ display: "flex" }}>
+          {(orientation === "b" ? [...row].reverse() : row).map((piece, c: number) => {
+            const actualRow = orientation === "b" ? 7 - r : r
+            const actualCol = orientation === "b" ? 7 - c : c
+            const square = files[actualCol] + (8 - actualRow)
 
-          const square = files[actualCol] + (8 - actualRow)
-
-          return (
-            <Square
-              key={square}
-              square={square}
-              piece={piece}
-              game={game}
-              selectedSquare={selectedSquare}
-              setSelectedSquare={setSelectedSquare}
-              makeMove={makeMove}
-              isLegalMove={legalSquares.includes(square)}
-              lastMove = {lastMove}
-            />
+            return (
+              <Square
+                key={square}
+                square={square}
+                piece={piece}
+                game={game}
+                selectedSquare={selectedSquare}
+                setSelectedSquare={setSelectedSquare}
+                makeMove={makeMove}
+                isLegalMove={legalSquares.includes(square)}
+                lastMove = {lastMove}
+              />
           )
         })}
       </div>
