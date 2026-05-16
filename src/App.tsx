@@ -146,6 +146,38 @@ function App() {
       <h1>Chess App</h1>
 
       <div className="main">
+        <div className="left-sidebar">
+          <h2> Analysis mode </h2>
+          <Controls
+            newGame={newGame}
+            undo={undo}
+            isBoardFlipped={isBoardFlipped}
+            setBoardFlipped={setBoardFlipped}
+          />
+          <div className="settings">
+            <label>
+              <input
+                type="checkbox"
+                checked={settings.soundEnabled}
+                onChange={(e) =>
+                  setSettings(s => ({ ...s, soundEnabled: e.target.checked }))
+                }
+              />
+              Sound
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={settings.highlightLastMove}
+                onChange={(e) =>
+                  setSettings(s => ({ ...s, highlightLastMove: e.target.checked }))
+                }
+              />
+              Highlight last move
+            </label>
+          </div>
+        </div>
         <div className="chess-board">
           <Board
             game={viewGame}
@@ -157,7 +189,7 @@ function App() {
             lastMove={lastMove}
           />
         </div>
-        <div className="sidebar">
+        <div className="right-sidebar">
           <PGNPanel
             pgnRows={pgnRows}
             goToMove={goToMove}
@@ -179,35 +211,6 @@ function App() {
             </div>
           </div>
         </div>
-      </div>
-      <Controls
-        newGame={newGame}
-        undo={undo}
-        isBoardFlipped={isBoardFlipped}
-        setBoardFlipped={setBoardFlipped}
-      />
-      <div className="settings">
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.soundEnabled}
-            onChange={(e) =>
-              setSettings(s => ({ ...s, soundEnabled: e.target.checked }))
-            }
-          />
-          Sound
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.highlightLastMove}
-            onChange={(e) =>
-              setSettings(s => ({ ...s, highlightLastMove: e.target.checked }))
-            }
-          />
-          Highlight last move
-        </label>
       </div>
       <div className="status">
           <strong>{status}</strong>

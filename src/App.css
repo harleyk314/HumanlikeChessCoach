@@ -124,10 +124,20 @@ h1 {
   padding: 15px;
 }
 
-.sidebar {
+.left-sidebar {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+.right-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .textarea {
@@ -163,6 +173,7 @@ button:active {
 .controls {
   margin-top: 20px;
   display: flex;
+  flex-direction: column;
   gap: 10px;
   justify-content: center;
 }
@@ -177,6 +188,7 @@ button:active {
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
+  flex-direction: column;
   font-size: 14px;
 }
 
@@ -186,11 +198,6 @@ button:active {
   gap: 6px;
 }
 
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
 .move-controls {
   display: flex;
