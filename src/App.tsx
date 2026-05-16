@@ -6,7 +6,42 @@ import Board from "./Board"
 import PGNPanel from "./PGNPanel"
 import Controls from "./Controls"
 
+type AppConfig = {
+  engine: {
+    enabled: boolean
+    playsMoves: boolean
+    depth: number
+  }
+
+  ui: {
+    showEvalBar: boolean
+    showTree: boolean
+  }
+
+  rules: {
+    enforceTurns: boolean
+    allowNavigation: boolean
+  }
+}
+
 function App() {
+
+  const defaultConfig: AppConfig = {
+    engine: {
+      enabled: false,
+      playsMoves: false,
+      depth: 10
+    },
+    ui: {
+      showEvalBar: false,
+      showTree: false
+    },
+    rules: {
+      enforceTurns: true,
+      allowNavigation: true
+    }
+  }
+
   const gameRef = useRef(new Chess())
   const [, forceRender] = useState(0)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
@@ -18,6 +53,7 @@ function App() {
   })
   const [isBoardFlipped, setBoardFlipped] = useState(false)
   const [pgnInput, setPgnInput] = useState("")
+  const [config, setConfig] = useState<AppConfig>(defaultConfig)
   const game = gameRef.current
   const moves = game.history({ verbose: true })
   const lastMove = viewIndex >= 0 ? moves[viewIndex] : null
@@ -26,6 +62,8 @@ function App() {
   const isStalemate = game.isStalemate()
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
+
+
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
   const pgnRows: { moveNumber: number; white: any; black?: any }[] = []
@@ -165,6 +203,12 @@ function App() {
             isBoardFlipped={isBoardFlipped}
             setBoardFlipped={setBoardFlipped}
           />
+          <button>
+            Analysis Mode (Testing only)
+          </button>
+          <button>
+            Play mode (Testing only)
+          </button>
           <div className="settings">
             <label>
               <input
