@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import { Chess } from "chess.js"
 import { useRef, useState } from "react"
+import { useStockfish } from "./hooks/useStockfish"
 import "./App.css"
 import Board from "./Board"
 import PGNPanel from "./PGNPanel"
@@ -58,11 +59,13 @@ function App() {
   const moves = game.history({ verbose: true })
   const lastMove = viewIndex >= 0 ? moves[viewIndex] : null
   const currentIndex = moves.length === 0 ? null : moves.length - 1
+  //game stages
   const isCheckmate = game.isCheckmate()
   const isStalemate = game.isStalemate()
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
-
+  //engine stuff
+  const { bestMove, evaluation, analyse } = useStockfish()
 
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
@@ -209,6 +212,11 @@ function App() {
           <button>
             Play mode (Testing only)
           </button>
+          <button onClick={() => analyse(viewGame.fen())}>
+            Test Stockfish
+          </button>
+          <div>Best move: {bestMove}</div>
+          <div>Evaluation: {evaluation}</div>
           <div className="settings">
             <label>
               <input
