@@ -1,11 +1,14 @@
 /// <reference types="vite/client" />
 import { Chess } from "chess.js"
 import { useEffect, useRef, useState } from "react"
-import { useStockfish } from "./hooks/useStockfish"
 import "./App.css"
 import Board from "./Board"
 import PGNPanel from "./PGNPanel"
 import Controls from "./Controls"
+//Stockfish hook imports
+import { useStockfishAnalysis } from "./hooks/useStockfishAnalysis"
+import { useStockfishOpponent } from "./hooks/useStockfishOpponent"
+
 
 type AppConfig = {
   engine: {
@@ -29,8 +32,8 @@ function App() {
 
   const defaultConfig: AppConfig = {
     engine: {
-      enabled: false,
-      playsMoves: false,
+      enabled: true,
+      playsMoves: true,
       depth: 10
     },
     ui: {
@@ -65,7 +68,8 @@ function App() {
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
   //engine stuff
-  const { bestMove, evaluation, isThinking, analyse } = useStockfish()
+  const { bestMove, evaluation, isThinking, analyse } = useStockfishAnalysis(config.engine.depth)
+  const { bestMove: opponentMove, isThinking: opponentThinking, getMove } = useStockfishOpponent(config.engine.depth)
   
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
@@ -185,6 +189,46 @@ function App() {
     analyse(viewGame.fen())
   }, [viewGame.fen()])
   
+  // Analysis - fires when position changes
+  useEffect(() => {
+    analyse(viewGame.fen())
+  }, [viewGame.fen()])
+
+  // Engine - fires when it's the opponent's turn
+  useEffect(() => {
+    if (!config.engine.enabled) return
+    if (!config.engine.playsMoves) return
+
+    const isLatest = viewIndex === moves.length - 1 || moves.length === 0
+    if (!isLatest) return
+
+    const engineColor = isBoardFlipped ? "w" : "b"
+
+    console.log("Engine check:", {
+      engineColor,
+      gameTurn: game.turn(),
+      isLatest,
+      viewIndex,
+      movesLength: moves.length
+    })
+
+    if (game.turn() !== engineColor) return
+    console.log("Calling getMove with:", game.fen())
+    getMove(game.fen())
+  }, [viewIndex, game.turn()])
+
+  // Act on opponent's move when it arrives
+  useEffect(() => {
+    if (!opponentMove) return
+
+    const isLatest = viewIndex === moves.length - 1 || moves.length === 0
+    if (!isLatest) return
+
+    const from = opponentMove.slice(0, 2)
+    const to = opponentMove.slice(2, 4)
+    makeMove(from, to)
+  }, [opponentMove])
+
   return (
     <div className="app">
       <div className="header">
