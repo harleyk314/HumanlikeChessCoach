@@ -12,6 +12,8 @@ type Props = {
     from: string
     to: string
   } | null
+  engineColor: "w" | "b"
+  engineActive: boolean
 }
 
 function Square({
@@ -22,14 +24,26 @@ function Square({
   setSelectedSquare,
   makeMove,
   isLegalMove,
-  lastMove
+  lastMove,
+  engineColor,
+  engineActive
 }: Props) {
 
   const handleClick = () => {
-    if (!selectedSquare) {
-      if (piece) setSelectedSquare(square)
-      return
+    console.log("handleClick:", {
+      square,
+      selectedSquare,
+      gameTurn: game.turn(),
+      pieceColor: piece?.color
+    })
+  if (!selectedSquare) {
+    if (piece && piece.color === game.turn()) {
+      // don't allow selecting engine's pieces
+      if (engineActive && piece.color === engineColor) return
+      setSelectedSquare(square)
     }
+    return
+  }
 
     if (selectedSquare === square) {
       setSelectedSquare(null)

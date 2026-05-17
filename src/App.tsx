@@ -14,7 +14,9 @@ type AppConfig = {
   engine: {
     enabled: boolean
     playsMoves: boolean
-    depth: number
+    color: "w" | "b"
+    opponentDepth: number
+    analysisDepth: number
   }
 
   ui: {
@@ -27,14 +29,13 @@ type AppConfig = {
     allowNavigation: boolean
   }
 }
-
-function App() {
-
   const defaultConfig: AppConfig = {
     engine: {
       enabled: true,
       playsMoves: true,
-      depth: 10
+      color: "b",
+      opponentDepth: 20,
+      analysisDepth: 15
     },
     ui: {
       showEvalBar: false,
@@ -45,6 +46,7 @@ function App() {
       allowNavigation: true
     }
   }
+function App() {
 
   const gameRef = useRef(new Chess())
   const [, forceRender] = useState(0)
@@ -68,8 +70,8 @@ function App() {
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
   //engine stuff
-  const { bestMove, evaluation, isThinking, analyse } = useStockfishAnalysis(config.engine.depth)
-  const { bestMove: opponentMove, isThinking: opponentThinking, getMove } = useStockfishOpponent(config.engine.depth)
+  const { bestMove, evaluation, isThinking, analyse } = useStockfishAnalysis(config.engine.analysisDepth)
+  const { bestMove: opponentMove, isThinking: opponentThinking, getMove } = useStockfishOpponent(config.engine.opponentDepth)
   
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
@@ -106,26 +108,30 @@ function App() {
     forceRender(x => x + 1)
   }
 
-  const makeMove = (from: string, to: string) => {
-    // only allow moves if we're at the latest position
+  const makeMove = (from: string, to: string, byEngine: boolean = false) => {
+    console.log("makeMove called:", { from, to, byEngine })
+    
+    if (!byEngine) {
+      const piece = game.get(from as any)
+      if (config.engine.enabled && config.engine.playsMoves) {
+        if (piece && piece.color === config.engine.color) return
+      }
+    }
+
     const isLatest = viewIndex === moves.length - 1 || moves.length === 0
     if (!isLatest) return
-    
+
     const move = gameRef.current.move({ from, to })
-
     if (!move) return
-    setViewIndex(gameRef.current.history().length - 1)
 
-    if (move) {
-      setViewIndex(gameRef.current.history().length - 1)
-      forceRender(x => x + 1)
-    }
+    setViewIndex(gameRef.current.history().length - 1)
+    forceRender(x => x + 1)
+
     if (settings.soundEnabled) {
       const audio = new Audio("/move.mp3")
       audio.play()
     }
-}
-
+  }
   const undo = () => {
     gameRef.current.undo()
 
@@ -170,6 +176,23 @@ function App() {
     setViewIndex(index)
   }
 
+  //We can probably adjust or get rid of this code block? Maybe?
+  const userCanMove = (square: string): boolean => {
+  // If engine is playing, user can't touch engine's pieces
+  if (config.engine.enabled && config.engine.playsMoves) {
+    const piece = game.get(square as any)
+    if (piece && piece.color === config.engine.color) return false
+  }
+
+  // If enforce turns is on, user can't move opponent's pieces
+  if (config.rules.enforceTurns) {
+    const piece = game.get(square as any)
+    if (piece && piece.color !== game.turn()) return false
+  }
+
+  return true
+}
+
   //ChatGPT: This is the key idea: we temporarily replay moves up to a point.
   const viewGame = (() => {
     const g = new Chess()
@@ -185,49 +208,32 @@ function App() {
 
   return g
 })()
-  useEffect(() => {
-    analyse(viewGame.fen())
-  }, [viewGame.fen()])
-  
-  // Analysis - fires when position changes
-  useEffect(() => {
-    analyse(viewGame.fen())
-  }, [viewGame.fen()])
+useEffect(() => {
+  analyse(viewGame.fen())
+}, [viewGame.fen()])
 
-  // Engine - fires when it's the opponent's turn
-  useEffect(() => {
-    if (!config.engine.enabled) return
-    if (!config.engine.playsMoves) return
+useEffect(() => {
+  if (!config.engine.enabled) return
+  if (!config.engine.playsMoves) return
 
-    const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-    if (!isLatest) return
+  const isLatest = viewIndex === moves.length - 1 || moves.length === 0
+  if (!isLatest) return
 
-    const engineColor = isBoardFlipped ? "w" : "b"
+  if (game.turn() !== config.engine.color) return
 
-    console.log("Engine check:", {
-      engineColor,
-      gameTurn: game.turn(),
-      isLatest,
-      viewIndex,
-      movesLength: moves.length
-    })
+  getMove(game.fen())
+}, [viewIndex, game.turn()])
 
-    if (game.turn() !== engineColor) return
-    console.log("Calling getMove with:", game.fen())
-    getMove(game.fen())
-  }, [viewIndex, game.turn()])
+useEffect(() => {
+  if (!opponentMove) return
 
-  // Act on opponent's move when it arrives
-  useEffect(() => {
-    if (!opponentMove) return
+  const isLatest = viewIndex === moves.length - 1 || moves.length === 0
+  if (!isLatest) return
 
-    const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-    if (!isLatest) return
-
-    const from = opponentMove.slice(0, 2)
-    const to = opponentMove.slice(2, 4)
-    makeMove(from, to)
-  }, [opponentMove])
+  const from = opponentMove.slice(0, 2)
+  const to = opponentMove.slice(2, 4)
+  makeMove(from, to, true)  // ← true was missing
+}, [opponentMove])
 
   return (
     <div className="app">
@@ -299,6 +305,8 @@ function App() {
             makeMove={makeMove}
             settings={settings}
             lastMove={lastMove}
+            engineColor={config.engine.color}
+            engineActive={config.engine.enabled && config.engine.playsMoves}
           />
         </div>
         <div className="right-sidebar">

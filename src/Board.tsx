@@ -15,6 +15,8 @@ type Props = {
     from: string
     to: string
   } | null
+  engineColor: "w" | "b"
+  engineActive: boolean
 }
 
 const files = ["a","b","c","d","e","f","g","h"]
@@ -26,7 +28,9 @@ function Board({
   isBoardFlipped,
   setSelectedSquare,
   makeMove,
-  lastMove
+  lastMove,
+  engineColor,
+  engineActive
 }: Props) {
 
   const board = game.board()
@@ -59,6 +63,8 @@ function Board({
                 makeMove={makeMove}
                 isLegalMove={legalSquares.includes(square)}
                 lastMove = {lastMove}
+                engineColor={engineColor}
+                engineActive={engineActive}
               />
           )
         })}
