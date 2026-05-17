@@ -65,7 +65,7 @@ function App() {
   const isDraw = game.isDraw()
   const isCheck = game.isCheck()
   //engine stuff
-  const { bestMove, evaluation, analyse } = useStockfish()
+  const { bestMove, evaluation, isThinking, analyse } = useStockfish()
   
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
@@ -221,6 +221,7 @@ function App() {
           </button>
           <div>Best move: {bestMove}</div>
           <div>Evaluation: {evaluation}</div>
+          {isThinking && <div>Stockfish is thinking...</div>}
           <div className="settings">
             <label>
               <input
