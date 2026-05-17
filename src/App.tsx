@@ -34,8 +34,8 @@ type AppConfig = {
       enabled: true,
       playsMoves: true,
       color: "b",
-      opponentDepth: 20,
-      analysisDepth: 15
+      opponentDepth: 25,
+      analysisDepth: 20
     },
     ui: {
       showEvalBar: false,
@@ -71,7 +71,7 @@ function App() {
   const isCheck = game.isCheck()
   //engine stuff
   const { bestMove, evaluation, isThinking, analyse } = useStockfishAnalysis(config.engine.analysisDepth)
-  const { bestMove: opponentMove, isThinking: opponentThinking, getMove } = useStockfishOpponent(config.engine.opponentDepth)
+  const { bestMove: opponentMove, isThinking: opponentThinking, getMove, resetMove } = useStockfishOpponent(config.engine.opponentDepth)
   
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
@@ -116,10 +116,9 @@ function App() {
       if (config.engine.enabled && config.engine.playsMoves) {
         if (piece && piece.color === config.engine.color) return
       }
+        const isLatest = viewIndex === moves.length - 1 || moves.length === 0
+        if (!isLatest) return
     }
-
-    const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-    if (!isLatest) return
 
     const move = gameRef.current.move({ from, to })
     if (!move) return
@@ -132,14 +131,20 @@ function App() {
       audio.play()
     }
   }
-  const undo = () => {
+const undo = () => {
+  if (config.engine.enabled && config.engine.playsMoves) {
+    if (game.turn() === config.engine.color) return
     gameRef.current.undo()
-
-    const newLength = gameRef.current.history().length
-    setViewIndex(newLength - 1)
-
-    forceRender(x => x + 1)
+    gameRef.current.undo()
+  } else {
+    gameRef.current.undo()
   }
+
+  const newLength = gameRef.current.history().length
+  setViewIndex(newLength - 1)
+  resetMove()
+  forceRender(x => x + 1)
+}
 
   const loadPgn = () => {
     const newGame = new Chess()
@@ -213,25 +218,34 @@ useEffect(() => {
 }, [viewGame.fen()])
 
 useEffect(() => {
+    console.log("Engine effect fired:", {
+    turn: game.turn(),
+    engineColor: config.engine.color,
+    viewIndex,
+    movesLength: moves.length,
+    isLatest: viewIndex === moves.length - 1 || moves.length === 0
+  })
   if (!config.engine.enabled) return
   if (!config.engine.playsMoves) return
 
   const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-  if (!isLatest) return
+  //if (!isLatest) return
 
   if (game.turn() !== config.engine.color) return
 
   getMove(game.fen())
-}, [viewIndex, game.turn()])
+}, [moves.length])
 
 useEffect(() => {
   if (!opponentMove) return
 
   const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-  if (!isLatest) return
+  console.log("isLatest in opponentMove effect:", isLatest, "viewIndex:", viewIndex, "movesLength:", moves.length)
+  //if (!isLatest) return
 
   const from = opponentMove.slice(0, 2)
   const to = opponentMove.slice(2, 4)
+  console.log("Calling makeMove:", from, to)
   makeMove(from, to, true)  // ← true was missing
 }, [opponentMove])
 
@@ -271,7 +285,7 @@ useEffect(() => {
           </button>
           <div>Best move: {bestMove}</div>
           <div>Evaluation: {evaluation}</div>
-          {isThinking && <div>Stockfish is thinking...</div>}
+          {isThinking && <div className="thinking-indicator">Analysing...</div>}
           <div className="settings">
             <label>
               <input
@@ -310,6 +324,7 @@ useEffect(() => {
           />
         </div>
         <div className="right-sidebar">
+          {opponentThinking && <div className="thinking-indicator">Opponent is thinking...</div>}
           <PGNPanel
             pgnRows={pgnRows}
             goToMove={goToMove}

@@ -28,5 +28,9 @@ export function useStockfishOpponent(depth: number = 15) {
     setIsThinking(true)
   }
 
-  return { bestMove, isThinking, getMove }
+  const resetMove = () => {
+    setBestMove(null)
+  }
+
+  return { bestMove, isThinking, getMove, resetMove }
 }
