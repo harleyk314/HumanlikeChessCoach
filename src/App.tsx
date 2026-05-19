@@ -34,8 +34,8 @@ type AppConfig = {
       enabled: true,
       playsMoves: true,
       color: "b",
-      opponentDepth: 10,
-      analysisDepth: 4
+      opponentDepth: 12,
+      analysisDepth: 12
     },
     ui: {
       showEvalBar: false,
@@ -228,10 +228,10 @@ useEffect(() => {
   if (!config.engine.playsMoves) return
 
   const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-  //if (!isLatest) return
+  if (!isLatest) return
 
   if (game.turn() !== config.engine.color) return
-
+  setOpponentThinking(true)
   getMove(game.fen())
 }, [moves.length])
 
@@ -239,7 +239,7 @@ useEffect(() => {
   if (!opponentMove) return
 
   //for the visual display, this indicates when the engine is "thinking"
-  setOpponentThinking(true)
+  console.log("opponentMove effect fired:", opponentMove)
   const delay = setTimeout(() => {
     const from = opponentMove.slice(0, 2)
     const to = opponentMove.slice(2, 4)

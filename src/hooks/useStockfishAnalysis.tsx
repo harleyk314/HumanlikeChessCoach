@@ -17,35 +17,40 @@ export function useStockfishAnalysis(depth: number = 15) {
   const [evaluation, setEvaluation] = useState<number | null>(null)
   const [isThinking, setIsThinking] = useState(false)
 
-  useEffect(() => {
-    createStockfishInstance((message: string) => {
-      if (message.includes("score cp")) {
-        const parts = message.split("score cp ")[1]
-        const cp = parseInt(parts.split(" ")[0])
-        evaluationRef.current = cp
-        setEvaluation(cp)
+useEffect(() => {
+  createStockfishInstance((message: string) => {
+    if (message.includes("score cp")) {
+      const parts = message.split("score cp ")[1]
+      const cp = parseInt(parts.split(" ")[0])
+      evaluationRef.current = cp
+      setEvaluation(cp)
+
+      // update best move in real time from pv
+      if (message.includes(" pv ")) {
+        const pvMatch = message.split(" pv ")[1]
+        if (pvMatch) {
+          const currentBest = pvMatch.split(" ")[0]
+          setBestMove(currentBest)
+        }
       }
+    }
 
-      if (message.startsWith("bestmove")) {
-        const move = message.split(" ")[1]
-
-        if (searchIdRef.current !== searchIdRef.current) return
-
-        const fen = currentFenRef.current
-        if (!fen) return
-
-        cacheRef.current.set(fen, {
-          bestMove: move,
-          evaluation: evaluationRef.current ?? 0
-        })
-
-        setBestMove(move)
-        setIsThinking(false)
-      }
-    }).then((sf) => {
-      sfRef.current = sf
-    })
-  }, [])
+    if (message.startsWith("bestmove")) {
+      const move = message.split(" ")[1]
+      if (searchIdRef.current !== searchIdRef.current) return
+      const fen = currentFenRef.current
+      if (!fen) return
+      cacheRef.current.set(fen, {
+        bestMove: move,
+        evaluation: evaluationRef.current ?? 0
+      })
+      setBestMove(move)
+      setIsThinking(false)
+    }
+  }).then((sf) => {
+    sfRef.current = sf
+  })
+}, [])
 
   const analyse = (fen: string) => {
     const sf = sfRef.current
