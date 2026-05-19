@@ -32,5 +32,5 @@ export function useStockfishOpponent(depth: number = 15) {
     setBestMove(null)
   }
 
-  return { bestMove, isThinking, getMove, resetMove }
+  return { bestMove, getMove, resetMove }
 }

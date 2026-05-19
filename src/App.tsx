@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { Chess } from "chess.js"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import "./App.css"
 import Board from "./Board"
 import PGNPanel from "./PGNPanel"
@@ -34,8 +34,8 @@ type AppConfig = {
       enabled: true,
       playsMoves: true,
       color: "b",
-      opponentDepth: 25,
-      analysisDepth: 20
+      opponentDepth: 10,
+      analysisDepth: 4
     },
     ui: {
       showEvalBar: false,
@@ -49,6 +49,7 @@ type AppConfig = {
 function App() {
 
   const gameRef = useRef(new Chess())
+  const audioRef = useRef(new Audio("/move.mp3"))
   const [, forceRender] = useState(0)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [viewIndex, setViewIndex] = useState(-1) //-1 is the starting index
@@ -61,6 +62,7 @@ function App() {
   const [pgnInput, setPgnInput] = useState("")
   const [config, setConfig] = useState<AppConfig>(defaultConfig)
   const game = gameRef.current
+  //Does moves actually need to be memoized?
   const moves = game.history({ verbose: true })
   const lastMove = viewIndex >= 0 ? moves[viewIndex] : null
   const currentIndex = moves.length === 0 ? null : moves.length - 1
@@ -71,8 +73,8 @@ function App() {
   const isCheck = game.isCheck()
   //engine stuff
   const { bestMove, evaluation, isThinking, analyse } = useStockfishAnalysis(config.engine.analysisDepth)
-  const { bestMove: opponentMove, isThinking: opponentThinking, getMove, resetMove } = useStockfishOpponent(config.engine.opponentDepth)
-  
+  const { bestMove: opponentMove, getMove, resetMove } = useStockfishOpponent(config.engine.opponentDepth)
+  const [opponentThinking, setOpponentThinking] = useState(false)
 
   //Set up the PGN rows for game import (should this be in PGNPanel?)
   const pgnRows: { moveNumber: number; white: any; black?: any }[] = []
@@ -127,8 +129,8 @@ function App() {
     forceRender(x => x + 1)
 
     if (settings.soundEnabled) {
-      const audio = new Audio("/move.mp3")
-      audio.play()
+      audioRef.current.currentTime = 0
+      audioRef.current.play()
     }
   }
 const undo = () => {
@@ -198,23 +200,20 @@ const undo = () => {
   return true
 }
 
-  //ChatGPT: This is the key idea: we temporarily replay moves up to a point.
-  const viewGame = (() => {
-    const g = new Chess()
-
-    const safeMoves =
-      viewIndex === -1
-        ? []
-        : moves.slice(0, viewIndex + 1)
-
-    for (const m of safeMoves) {
-      g.move(m)
-    }
-
+const viewGame = useMemo(() => {
+  const g = new Chess()
+  const safeMoves = viewIndex === -1 ? [] : moves.slice(0, viewIndex + 1)
+  for (const m of safeMoves) {
+    g.move(m)
+  }
   return g
-})()
+}, [viewIndex, moves])
 useEffect(() => {
-  analyse(viewGame.fen())
+  const timeout = setTimeout(() => {
+    analyse(viewGame.fen())
+  }, 150)
+
+  return () => clearTimeout(timeout)
 }, [viewGame.fen()])
 
 useEffect(() => {
@@ -239,14 +238,16 @@ useEffect(() => {
 useEffect(() => {
   if (!opponentMove) return
 
-  const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-  console.log("isLatest in opponentMove effect:", isLatest, "viewIndex:", viewIndex, "movesLength:", moves.length)
-  //if (!isLatest) return
+  //for the visual display, this indicates when the engine is "thinking"
+  setOpponentThinking(true)
+  const delay = setTimeout(() => {
+    const from = opponentMove.slice(0, 2)
+    const to = opponentMove.slice(2, 4)
+    makeMove(from, to, true)
+    setOpponentThinking(false)
+  }, 1000)
 
-  const from = opponentMove.slice(0, 2)
-  const to = opponentMove.slice(2, 4)
-  console.log("Calling makeMove:", from, to)
-  makeMove(from, to, true)  // ← true was missing
+  return () => clearTimeout(delay)
 }, [opponentMove])
 
   return (
@@ -285,7 +286,9 @@ useEffect(() => {
           </button>
           <div>Best move: {bestMove}</div>
           <div>Evaluation: {evaluation}</div>
-          {isThinking && <div className="thinking-indicator">Analysing...</div>}
+          <div className="thinking-indicator" style={{ visibility: isThinking ? "visible" : "hidden" }}>
+            Analysing...
+          </div>
           <div className="settings">
             <label>
               <input
@@ -324,7 +327,9 @@ useEffect(() => {
           />
         </div>
         <div className="right-sidebar">
-          {opponentThinking && <div className="thinking-indicator">Opponent is thinking...</div>}
+          <div className="thinking-indicator" style={{ visibility: opponentThinking ? "visible" : "hidden" }}>
+            Opponent is thinking...
+          </div>
           <PGNPanel
             pgnRows={pgnRows}
             goToMove={goToMove}
