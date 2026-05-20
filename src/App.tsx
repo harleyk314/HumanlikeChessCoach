@@ -59,6 +59,7 @@ type AppConfig = {
 function App() {
 
   const gameRef = useRef(new Chess())
+  const fenHistoryRef = useRef<string[]>([new Chess().fen()])
   const audioRef = useRef(new Audio("/move.mp3"))
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [viewIndex, setViewIndex] = useState(-1) //-1 is the starting index
@@ -117,6 +118,7 @@ function App() {
 
   const newGame = () => {
     gameRef.current = new Chess()
+    fenHistoryRef.current = [new Chess().fen()]
     setViewIndex(-1)
     setBoardFlipped(false)
     setPendingPromotion(null)
@@ -139,7 +141,11 @@ function App() {
 
     const move = gameRef.current.move(moveObj)
     if (!move) return
-
+    //trim any future history (e.g. after undo) then append
+    fenHistoryRef.current = [
+      ...fenHistoryRef.current.slice(0, gameRef.current.history().length),
+      gameRef.current.fen()
+    ]
     setViewIndex(gameRef.current.history().length - 1)
     forceRender(x => x + 1)
 
@@ -179,6 +185,7 @@ const undo = () => {
   }
 
   const newLength = gameRef.current.history().length
+  fenHistoryRef.current = fenHistoryRef.current.slice(0, newLength + 1)
   setViewIndex(newLength - 1)
   resetMove()
   forceRender(x => x + 1)
@@ -195,6 +202,8 @@ const undo = () => {
     }
 
     gameRef.current = newGame
+    //rebuild FEN history from the loaded game
+    const loadedMoves = newGame.history({ verbose: true })
     setSelectedSquare(null)
     forceRender(x => x + 1)
   }
@@ -237,14 +246,11 @@ const undo = () => {
 }
 
 const viewGame = useMemo(() => {
-  console.count("viewGame recomputed")
   const g = new Chess()
-  const safeMoves = viewIndex === -1 ? [] : moves.slice(0, viewIndex + 1)
-  for (const m of safeMoves) {
-    g.move(m)
-  }
+  const fen = fenHistoryRef.current[viewIndex + 1] ?? fenHistoryRef.current[0]
+  g.load(fen)
   return g
-}, [viewIndex, moves])
+}, [viewIndex, renderCount])
 useEffect(() => {
   //Log debugging for lagging issues
   console.count("analysis effect")
