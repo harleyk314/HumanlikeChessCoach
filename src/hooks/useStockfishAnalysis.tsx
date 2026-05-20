@@ -36,6 +36,7 @@ useEffect(() => {
     }
 
     if (message.startsWith("bestmove")) {
+      console.log("bestmove received, isThinking was:", isThinking)
       const move = message.split(" ")[1]
       if (searchIdRef.current !== searchIdRef.current) return
       const fen = currentFenRef.current
@@ -53,6 +54,7 @@ useEffect(() => {
 }, [])
 
   const analyse = (fen: string) => {
+    console.count("stockfish commanded")
     const sf = sfRef.current
     if (!sf) return
 
@@ -68,6 +70,7 @@ useEffect(() => {
     currentFenRef.current = fen
 
     sf.postMessage("stop")
+    console.count("stockfish stop sent")
     sf.postMessage(`position fen ${fen}`)
     sf.postMessage(`go depth ${depth}`)
     setIsThinking(true)

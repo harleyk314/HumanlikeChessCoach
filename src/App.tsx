@@ -8,7 +8,7 @@ import Controls from "./Controls"
 //Stockfish hook imports
 import { useStockfishAnalysis } from "./hooks/useStockfishAnalysis"
 import { useStockfishOpponent } from "./hooks/useStockfishOpponent"
-
+import PromotionModal from "./PromotionModal"
 
 type AppConfig = {
   engine: {
@@ -34,8 +34,8 @@ type AppConfig = {
       enabled: true,
       playsMoves: true,
       color: "b",
-      opponentDepth: 12,
-      analysisDepth: 12
+      opponentDepth: 1,
+      analysisDepth: 15
     },
     ui: {
       showEvalBar: false,
@@ -46,11 +46,20 @@ type AppConfig = {
       allowNavigation: true
     }
   }
+
+  // Detect if a move is a pawn reaching the back rank (needs promotion)
+  function isPromotionMove(game: Chess, from: string, to: string): boolean {
+    const piece = game.get(from as any)
+    if (!piece || piece.type !== "p") return false
+    const toRank = to[1]
+    return (piece.color === "w" && toRank === "8") ||
+           (piece.color === "b" && toRank === "1")
+  }
+
 function App() {
 
   const gameRef = useRef(new Chess())
   const audioRef = useRef(new Audio("/move.mp3"))
-  const [, forceRender] = useState(0)
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null)
   const [viewIndex, setViewIndex] = useState(-1) //-1 is the starting index
   const [settings, setSettings] = useState({
@@ -61,9 +70,12 @@ function App() {
   const [isBoardFlipped, setBoardFlipped] = useState(false)
   const [pgnInput, setPgnInput] = useState("")
   const [config, setConfig] = useState<AppConfig>(defaultConfig)
+  // Stores a pending pawn promotion: we know from/to but need the piece choice
+  const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(null)
   const game = gameRef.current
   //Does moves actually need to be memoized?
-  const moves = game.history({ verbose: true })
+  const [renderCount, forceRender] = useState(0)
+  const moves = useMemo(() => gameRef.current.history({ verbose: true }), [renderCount])
   const lastMove = viewIndex >= 0 ? moves[viewIndex] : null
   const currentIndex = moves.length === 0 ? null : moves.length - 1
   //game stages
@@ -107,22 +119,25 @@ function App() {
     gameRef.current = new Chess()
     setViewIndex(-1)
     setBoardFlipped(false)
+    setPendingPromotion(null)
     forceRender(x => x + 1)
   }
 
-  const makeMove = (from: string, to: string, byEngine: boolean = false) => {
-    console.log("makeMove called:", { from, to, byEngine })
-    
+  // Core move executor — always receives a fully-specified move (promotion included)
+  const commitMove = (from: string, to: string, promotion?: string, byEngine: boolean = false) => {
     if (!byEngine) {
       const piece = game.get(from as any)
       if (config.engine.enabled && config.engine.playsMoves) {
         if (piece && piece.color === config.engine.color) return
       }
-        const isLatest = viewIndex === moves.length - 1 || moves.length === 0
-        if (!isLatest) return
+      const isLatest = viewIndex === moves.length - 1 || moves.length === 0
+      if (!isLatest) return
     }
 
-    const move = gameRef.current.move({ from, to })
+    const moveObj: any = { from, to }
+    if (promotion) moveObj.promotion = promotion
+
+    const move = gameRef.current.move(moveObj)
     if (!move) return
 
     setViewIndex(gameRef.current.history().length - 1)
@@ -133,6 +148,27 @@ function App() {
       audioRef.current.play()
     }
   }
+  // Called by Board/Square — intercepts promotion moves before committing
+  const makeMove = (from: string, to: string, byEngine: boolean = false) => {
+    if (!byEngine && isPromotionMove(game, from, to)) {
+      // Park the move and open the promotion modal
+      setPendingPromotion({ from, to })
+      setSelectedSquare(null)
+      return
+    }
+    commitMove(from, to, undefined, byEngine)
+  }
+
+  const handlePromotionChoice = (piece: "q" | "r" | "b" | "n") => {
+    if (!pendingPromotion) return
+    commitMove(pendingPromotion.from, pendingPromotion.to, piece)
+    setPendingPromotion(null)
+  }
+
+  const handlePromotionCancel = () => {
+    setPendingPromotion(null)
+  }
+
 const undo = () => {
   if (config.engine.enabled && config.engine.playsMoves) {
     if (game.turn() === config.engine.color) return
@@ -201,6 +237,7 @@ const undo = () => {
 }
 
 const viewGame = useMemo(() => {
+  console.count("viewGame recomputed")
   const g = new Chess()
   const safeMoves = viewIndex === -1 ? [] : moves.slice(0, viewIndex + 1)
   for (const m of safeMoves) {
@@ -209,9 +246,12 @@ const viewGame = useMemo(() => {
   return g
 }, [viewIndex, moves])
 useEffect(() => {
+  //Log debugging for lagging issues
+  console.count("analysis effect")
+  console.log("viewGame.fen()", viewGame.fen())
   const timeout = setTimeout(() => {
     analyse(viewGame.fen())
-  }, 150)
+  }, 400)
 
   return () => clearTimeout(timeout)
 }, [viewGame.fen()])
@@ -243,7 +283,9 @@ useEffect(() => {
   const delay = setTimeout(() => {
     const from = opponentMove.slice(0, 2)
     const to = opponentMove.slice(2, 4)
-    makeMove(from, to, true)
+    // Engine moves sometimes include a promotion piece (e.g. "e7e8q")
+    const promotion = opponentMove.length === 5 ? opponentMove[4] : undefined
+    commitMove(from, to, promotion, true)
     setOpponentThinking(false)
   }, 1000)
 
@@ -353,8 +395,16 @@ useEffect(() => {
         </div>
       </div>
       <div className="status">
-          <strong>{status}</strong>
+        <strong>{status}</strong>
       </div>
+      {/* Promotion modal — rendered outside the board so it's not clipped */}
+      {pendingPromotion && (
+        <PromotionModal
+          color={game.turn()}
+          onChoose={handlePromotionChoice}
+          onCancel={handlePromotionCancel}
+        />
+      )}
     </div>
   )
 }
